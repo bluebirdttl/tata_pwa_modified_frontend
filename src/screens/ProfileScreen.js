@@ -71,24 +71,24 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
     const id = originalIdRef.current
     if (!id) return
     const url = `${API_URL.replace(/\/$/, "")}/api/employees/${encodeURIComponent(id)}`
-    ;(async () => {
-      try {
-        const res = await fetch(url, { headers: { "Content-Type": "application/json" } })
-        if (!res.ok) return
-        const data = await res.json()
-        const obj = Array.isArray(data) ? data[0] : data
-        if (!obj) return
+      ; (async () => {
+        try {
+          const res = await fetch(url, { headers: { "Content-Type": "application/json" } })
+          if (!res.ok) return
+          const data = await res.json()
+          const obj = Array.isArray(data) ? data[0] : data
+          if (!obj) return
 
-        setName((cur) => (cur ? cur : obj.name || ""))
-        setEmail((cur) => (cur ? cur : obj.email || ""))
-        setRole((cur) => (cur ? cur : obj.role || ""))
-        setOtherRole((cur) => (cur ? cur : obj.otherRole || obj.other_role || ""))
-        setCluster((cur) => (cur ? cur : obj.cluster || ""))
-        setLocation((cur) => (cur ? cur : obj.location || ""))
-      } catch (e) {
-        console.warn("Profile refresh failed:", e)
-      }
-    })()
+          setName((cur) => (cur ? cur : obj.name || ""))
+          setEmail((cur) => (cur ? cur : obj.email || ""))
+          setRole((cur) => (cur ? cur : obj.role || ""))
+          setOtherRole((cur) => (cur ? cur : obj.otherRole || obj.other_role || ""))
+          setCluster((cur) => (cur ? cur : obj.cluster || ""))
+          setLocation((cur) => (cur ? cur : obj.location || ""))
+        } catch (e) {
+          console.warn("Profile refresh failed:", e)
+        }
+      })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employee])
 
@@ -175,29 +175,8 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
       let body = await readResponse(res)
       console.log("[ProfileScreen] PUT", res.status, body)
 
-      // PATCH fallback
       if (!res.ok) {
-        console.warn("[ProfileScreen] PUT failed; trying PATCH")
-        res = await fetch(target, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        })
-        body = await readResponse(res)
-        console.log("[ProfileScreen] PATCH", res.status, body)
-      }
-
-      // POST fallback to collection
-      if (!res.ok) {
-        console.warn("[ProfileScreen] PATCH failed; trying POST to collection endpoint")
-        const postRes = await fetch(`${base}/api/employees`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ empid: payload.empid, ...payload }),
-        })
-        const postBody = await readResponse(postRes)
-        console.log("[ProfileScreen] POST", postRes.status, postBody)
-        if (!postRes.ok) throw new Error(`All update attempts failed. Last status: ${postRes.status}`)
+        throw new Error(`Update failed with status ${res.status}`)
       }
 
       // Confirm by fetching server record (prefer new empid then original)
@@ -221,14 +200,15 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
         console.warn("sessionStorage merge failed:", e)
       }
 
+      // Update state and notify parent
+      setSaving(false)
       onSaveProfile && onSaveProfile(profileOnly)
       alert("Profile updated and confirmed on server.")
     } catch (err) {
       console.error("[ProfileScreen] Save error:", err)
       setError(err.message || "Save failed — check console/network")
-      alert(`Save failed: ${err.message}. See console/network tab.`)
-    } finally {
       setSaving(false)
+      alert(`Save failed: ${err.message}. See console/network tab.`)
     }
   }
 

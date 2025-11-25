@@ -18,7 +18,6 @@ export default function App() {
   })()
 
   const [user, setUser] = useState(initialUser)
-  const [showProfile, setShowProfile] = useState(false)
 
   const handleLogin = (userData) => {
     try {
@@ -31,14 +30,10 @@ export default function App() {
 
   const handleLogout = () => {
     setUser(null)
-    setShowProfile(false)
     try {
       sessionStorage.removeItem("user")
-    } catch {}
+    } catch { }
   }
-
-  const handleProfileOpen = () => setShowProfile(true)
-  const handleProfileClose = () => setShowProfile(false)
 
   // Note: DO NOT call useNavigate() here at top-level of App.
   // Instead we'll define small wrapper components below and those wrappers will call useNavigate()
@@ -73,21 +68,7 @@ export default function App() {
           path="/home"
           element={
             user ? (
-              showProfile ? (
-                <ProfileScreen
-                  employee={user}
-                  onBack={() => {
-                    setShowProfile(false)
-                  }}
-                  onSaveProfile={(profileOnly) => {
-                    // update only profile portion
-                    mergeProfileIntoUser(profileOnly)
-                    setShowProfile(false)
-                  }}
-                />
-              ) : (
-                <HomeScreen onLogout={handleLogout} onProfile={handleProfileOpen} employee={user} />
-              )
+              <HomeScreen onLogout={handleLogout} employee={user} />
             ) : (
               <Navigate to="/" />
             )

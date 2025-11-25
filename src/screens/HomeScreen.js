@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import EmployeeCard from "../components/EmployeeCard"
 import { API_URL } from "../config"
 
-export default function HomeScreen({ onLogout, onProfile, employee }) {
+export default function HomeScreen({ onLogout, employee }) {
   const navigate = useNavigate()
 
   const [employees, setEmployees] = useState([])
@@ -419,7 +419,7 @@ export default function HomeScreen({ onLogout, onProfile, employee }) {
                 <div
                   onClick={() => {
                     setProfileOpen(false)
-                    onProfile && onProfile()
+                    navigate("/profile")
                   }}
                   style={styles.profileMenuItem}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f8ff")}
