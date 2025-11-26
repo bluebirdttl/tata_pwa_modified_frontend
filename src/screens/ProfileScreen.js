@@ -1,6 +1,7 @@
 // Frontend/src/screens/ProfileScreen.js
 import React, { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import Navbar from "../components/Navbar"
 import { API_URL } from "../config"
 
 export default function ProfileScreen({ employee = null, onBack, onSaveProfile, onLogout, onProfile }) {
@@ -41,8 +42,6 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
 
   // responsive + navbar states
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 900 : false)
-  const [profileOpen, setProfileOpen] = useState(false)
-  const profileRef = useRef(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -214,45 +213,7 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
     }
   }
 
-  // ---------- NAVBAR & small helpers (copied & adapted from HomeScreen) ----------
-  const getInitials = (nameStr) => {
-    if (!nameStr) return "U"
-    return nameStr
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-  }
-  const getInitialsColor = (nm) => {
-    const colors = ["#0072bc", "#d32f2f", "#2e7d32", "#f57c00", "#7b1fa2"]
-    const n = (nm || " ").toString()
-    let hash = 0
-    for (let i = 0; i < n.length; i++) {
-      hash = n.charCodeAt(i) + ((hash << 5) - hash)
-    }
-    return colors[Math.abs(hash) % colors.length]
-  }
 
-  const profileName = (employee && (employee.name || "")) || "User"
-  const profileInitials = getInitials(profileName)
-  const profileBg = getInitialsColor(profileName)
-
-  useEffect(() => {
-    function handleOutside(e) {
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
-        setProfileOpen(false)
-      }
-    }
-    function handleEsc(e) {
-      if (e.key === "Escape") setProfileOpen(false)
-    }
-    document.addEventListener("mousedown", handleOutside)
-    document.addEventListener("keydown", handleEsc)
-    return () => {
-      document.removeEventListener("mousedown", handleOutside)
-      document.removeEventListener("keydown", handleEsc)
-    }
-  }, [])
 
   // ---------- STYLES ----------
   const styles = {
@@ -262,63 +223,7 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
       padding: isMobile ? "8px 12px" : "12px 20px",
       fontFamily: "Segoe UI, Tahoma, sans-serif",
     },
-    navWrapper: {
-      // removed extra padding around navbar (user requested)
-      marginBottom: 18,
-      // make navbar full-bleed and flush with page edges visually
-      background: "linear-gradient(90deg, #016db9 0%, #0078d4 100%)",
-      borderRadius: 10,
-      boxShadow: "0 6px 18px rgba(3, 45, 85, 0.08)",
-    },
-    header: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      color: "white",
-      padding: isMobile ? "10px 16px" : "14px 20px", // internal navbar padding retained, outer padding removed
-      borderRadius: 10,
-    },
-    title: { margin: 0, fontSize: isMobile ? 18 : 20, fontWeight: "700", letterSpacing: "0.2px" },
-    rightArea: { display: "flex", alignItems: "center", gap: "12px" },
-    profileButton: {
-      width: isMobile ? 40 : 48,
-      height: isMobile ? 40 : 48,
-      borderRadius: "50%",
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer",
-      border: "2px solid rgba(255,255,255,0.12)",
-      boxShadow: "0 2px 6px rgba(2,6,23,0.12)",
-      userSelect: "none",
-    },
-    profileInitials: {
-      color: "white",
-      fontWeight: 800,
-      fontSize: isMobile ? 13 : 15,
-      lineHeight: 1,
-    },
-    profileMenu: {
-      position: "absolute",
-      right: 12,
-      top: isMobile ? 54 : 64,
-      background: "white",
-      borderRadius: 8,
-      boxShadow: "0 8px 28px rgba(2,6,23,0.12)",
-      minWidth: 180,
-      zIndex: 60,
-      overflow: "hidden",
-      border: "1px solid #e9eef6",
-    },
-    profileMenuItem: {
-      padding: "10px 12px",
-      cursor: "pointer",
-      fontSize: 14,
-      color: "#0b5fa5",
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-    },
+
 
     // profile card / form styles
     container: {
@@ -372,104 +277,7 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
   return (
     <div style={styles.page}>
       {/* Navbar wrapper: outer padding removed as requested; internal header keeps consistent spacing */}
-      <div style={styles.navWrapper}>
-        <header style={styles.header}>
-          {/* LOGO: top-left */}
-          <img
-            src="../../Logo/MainLogo.png"
-            alt="Main Logo"
-            style={{ height: isMobile ? 40 : 50, marginRight: 12, objectFit: "contain", background: "white", borderRadius: 4, cursor: "pointer" }}
-            onClick={() => navigate("/home")}
-          />
-          <h1 style={styles.title}>Profile</h1>
-          <div style={styles.rightArea}>
-            {/* Notification Icon */}
-            <div
-              onClick={() => alert("you have received the following notification")}
-              style={{ marginRight: 16, cursor: "pointer", display: "flex", alignItems: "center", color: "white" }}
-              title="Notifications"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-              </svg>
-            </div>
-
-            <div style={{ position: "relative" }} ref={profileRef}>
-              <div
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setProfileOpen((s) => !s)
-                }}
-                role="button"
-                aria-haspopup="true"
-                aria-expanded={profileOpen}
-                style={{ ...styles.profileButton, background: profileBg }}
-                title={profileName}
-              >
-                <span style={styles.profileInitials}>{profileInitials}</span>
-              </div>
-
-              {profileOpen && (
-                <div style={styles.profileMenu} role="menu" aria-label="Profile menu">
-                  <div
-                    onClick={() => {
-                      setProfileOpen(false)
-                      onProfile && onProfile()
-                      navigate("/profile")
-                    }}
-                    style={styles.profileMenuItem}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f8ff")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <span style={{ width: 18, textAlign: "center" }}>👤</span>
-                    <span>Profile</span>
-                  </div>
-
-                  <div
-                    onClick={() => {
-                      setProfileOpen(false)
-                      navigate("/details")
-                    }}
-                    style={styles.profileMenuItem}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f8ff")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <span style={{ width: 18, textAlign: "center" }}>📋</span>
-                    <span>Details</span>
-                  </div>
-
-                  <div
-                    onClick={() => {
-                      setProfileOpen(false)
-                      window.open("https://forms.office.com/Pages/ResponsePage.aspx?id=YHed29djiE-ZJ_q-RG4jYu30tAiE4QZGndZ48sb8fWhUOTAxN0RFT0RCRzVXUDZYWEc1RUhORE1RSi4u&fswReload=1&fswNavStart=1764070424016", "_blank")
-                    }}
-                    style={styles.profileMenuItem}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f8ff")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <span style={{ width: 18, textAlign: "center" }}>💬</span>
-                    <span>Feedback</span>
-                  </div>
-
-                  {/* <div
-                    onClick={() => {
-                      setProfileOpen(false)
-                      onLogout && onLogout()
-                    }}
-                    style={styles.profileMenuItem}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f8ff")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <span style={{ width: 18, textAlign: "center" }}>🔒</span>
-                    <span>Logout</span>
-                  </div> */}
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-      </div>
+      <Navbar user={employee} onLogout={onLogout} title="Profile" />
 
       {/* Hidden uploaded screenshot path (developer requested path) */}
       <img src="/mnt/data/5438abe0-f333-4e41-8233-b5ea2387a27d.png" alt="hidden" style={{ display: "none" }} />

@@ -78,10 +78,17 @@ export default function EmployeeCard({ employee = {}, getInitials }) {
       if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}/.test(s)) {
         s = s.replace(/\s+/, "T")
       }
+      // Treat as UTC if no timezone info is present (check for Z or offset like +05:30)
+      // Note: checking includes("-") is bad because date has dashes. 
+      // We check if it ends with Z or has a timezone offset pattern at the end.
+      const hasTimeZone = /Z$|[+-]\d{2}:?\d{2}$/.test(s);
+      if (!hasTimeZone) {
+        s += "Z"
+      }
+
       const dt = new Date(s)
       if (isNaN(dt.getTime())) return null
-      // Adjust for IST: add 5.5 hours (19800000 ms)
-      dt.setTime(dt.getTime() + 19800000)
+
       return dt
     } catch {
       return null

@@ -5,6 +5,7 @@ import LoginScreen from "./screens/LoginScreen"
 import HomeScreen from "./screens/HomeScreen"
 import ProfileScreen from "./screens/ProfileScreen"
 import DetailScreen from "./screens/DetailScreen"
+import ResetPasswordScreen from "./screens/ResetPasswordScreen"
 
 export default function App() {
   // initialize from sessionStorage so reload keeps logged-in user
@@ -18,6 +19,7 @@ export default function App() {
   })()
 
   const [user, setUser] = useState(initialUser)
+  console.log("[App] Current user state:", user);
 
   const handleLogin = (userData) => {
     try {
@@ -60,7 +62,7 @@ export default function App() {
       <Routes>
         <Route
           path="/"
-          element={!user ? <LoginScreen onLogin={(u) => handleLogin(u)} /> : <Navigate to="/home" />}
+          element={!user ? <LoginScreen onLogin={(u) => handleLogin(u)} /> : <Navigate to={(user.role_type || "").trim().toLowerCase() === "manager" ? "/home" : "/details"} />}
         />
 
         {/* /home route - keeps previous UX where Profile is toggled inside home */}
@@ -68,7 +70,7 @@ export default function App() {
           path="/home"
           element={
             user ? (
-              <HomeScreen onLogout={handleLogout} employee={user} />
+              (user.role_type || "").trim().toLowerCase() === "manager" ? <HomeScreen onLogout={handleLogout} employee={user} /> : <Navigate to="/details" />
             ) : (
               <Navigate to="/" />
             )
@@ -79,14 +81,22 @@ export default function App() {
         <Route
           path="/details"
           element={
-            user ? <DetailsRoute user={user} mergeProfileIntoUser={mergeProfileIntoUser} setUser={setUser} /> : <Navigate to="/" />
+            user ? <DetailsRoute user={user} mergeProfileIntoUser={mergeProfileIntoUser} setUser={setUser} onLogout={handleLogout} /> : <Navigate to="/" />
           }
         />
 
         {/* Profile route wrapper (route-based profile view) */}
         <Route
           path="/profile"
-          element={user ? <ProfileRoute user={user} mergeProfileIntoUser={mergeProfileIntoUser} /> : <Navigate to="/" />}
+          element={user ? <ProfileRoute user={user} mergeProfileIntoUser={mergeProfileIntoUser} onLogout={handleLogout} /> : <Navigate to="/" />}
+        />
+
+        {/* Reset Password route wrapper */}
+        <Route
+          path="/reset-password"
+          element={
+            user ? <ResetPasswordRoute user={user} onLogout={handleLogout} /> : <Navigate to="/" />
+          }
         />
 
         <Route path="*" element={<Navigate to="/" />} />
@@ -102,7 +112,7 @@ export default function App() {
  * - Uses useNavigate safely (this component is rendered inside Router)
  * - onSaveDetails merges entire server details into user (details endpoint expected)
  */
-function DetailsRoute({ user, mergeProfileIntoUser, setUser }) {
+function DetailsRoute({ user, mergeProfileIntoUser, setUser, onLogout }) {
   const navigate = useNavigate()
 
   const onSaveDetails = (serverRecord) => {
@@ -117,7 +127,7 @@ function DetailsRoute({ user, mergeProfileIntoUser, setUser }) {
     navigate("/home")
   }
 
-  return <DetailScreen employee={user} onBack={() => navigate("/home")} onSaveDetails={onSaveDetails} />
+  return <DetailScreen employee={user} onBack={() => navigate("/home")} onSaveDetails={onSaveDetails} onLogout={onLogout} />
 }
 
 /**
@@ -125,7 +135,7 @@ function DetailsRoute({ user, mergeProfileIntoUser, setUser }) {
  * - Uses useNavigate safely
  * - onSaveProfile merges *only profile keys* returned from ProfileScreen
  */
-function ProfileRoute({ user, mergeProfileIntoUser }) {
+function ProfileRoute({ user, mergeProfileIntoUser, onLogout }) {
   const navigate = useNavigate()
 
   const onSaveProfile = (profileOnly) => {
@@ -133,5 +143,14 @@ function ProfileRoute({ user, mergeProfileIntoUser }) {
     navigate("/home")
   }
 
-  return <ProfileScreen employee={user} onBack={() => navigate("/home")} onSaveProfile={onSaveProfile} />
+  return <ProfileScreen employee={user} onBack={() => navigate("/home")} onSaveProfile={onSaveProfile} onLogout={onLogout} />
+}
+
+/**
+ * ResetPasswordRoute
+ * - Uses useNavigate safely
+ */
+function ResetPasswordRoute({ user, onLogout }) {
+  const navigate = useNavigate();
+  return <ResetPasswordScreen user={user} onLogout={onLogout} />;
 }

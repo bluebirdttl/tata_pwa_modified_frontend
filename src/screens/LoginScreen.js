@@ -40,6 +40,7 @@ export default function LoginScreen({ onLogin }) {
       });
 
       const data = await response.json();
+      console.log("[LoginScreen] Login response:", data);
 
       // If fetch succeeded but API returned an error status
       if (!response.ok) {
@@ -47,18 +48,19 @@ export default function LoginScreen({ onLogin }) {
         setLoading(false);
         return;
       }
-
       // At this point response.ok === true
       if (data.success) {
         // Call onLogin with user object (frontend state)
         if (typeof onLogin === "function") onLogin(data.user);
 
-        // Redirect according to backend instruction
-        if (data.redirectTo) {
-          navigate(data.redirectTo);
-        } else {
-          // Fallback route
+        // alert("DEBUG USER DATA:\n" + JSON.stringify(data.user, null, 2));
+
+        // Redirect based on role_type
+        const role_type = (data.user?.role_type || "").trim().toLowerCase();
+        if (role_type === "Manager") {
           navigate("/home");
+        } else {
+          navigate("/details");
         }
       } else {
         // API responded ok but success=false
