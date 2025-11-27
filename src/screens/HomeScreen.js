@@ -235,6 +235,13 @@ export default function HomeScreen({ onLogout, employee }) {
       filtered = filtered.filter((emp) => isEmployeeAvailableInRange(emp, availabilityRange))
     }
 
+    // Sort by empid to ensure stable order
+    filtered.sort((a, b) => {
+      const idA = a.empid || a.id || 0;
+      const idB = b.empid || b.id || 0;
+      return idA > idB ? 1 : -1;
+    });
+
     setFilteredEmployees(filtered)
   }, [searchTerm, availabilityFilter, availabilityRange, employees])
 

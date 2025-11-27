@@ -270,6 +270,13 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
     },
   }
 
+  // Star Icon Component
+  const IconStar = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  )
+
   return (
     <div style={styles.page}>
       {/* Navbar wrapper: outer padding removed as requested; internal header keeps consistent spacing */}
@@ -281,7 +288,14 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
       {/* Profile card */}
       <div style={styles.container} role="region" aria-label="Profile screen">
         <div style={styles.headerRow}>
-          <div style={styles.pageTitle}>Profile</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={styles.pageTitle}>Profile</div>
+            {/* Star Display */}
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#fffbeb", padding: "4px 10px", borderRadius: "20px", border: "1px solid #fcd34d" }}>
+              <span style={{ fontSize: "16px", fontWeight: "700", color: "#b45309" }}>{employee?.stars || 0}</span>
+              <IconStar />
+            </div>
+          </div>
 
           {/* Back moved to top-right inside card as requested */}
           <div>

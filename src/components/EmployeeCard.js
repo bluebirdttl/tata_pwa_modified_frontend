@@ -28,6 +28,7 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
   // Initialize form data when entering edit mode
   useEffect(() => {
     if (isEditing) {
+      console.log("EmployeeCard: Edit mode activated");
       setFormData({
         current_project: employee.current_project || employee.currentProject || "",
         availability: employee.availability || "Occupied",
@@ -471,20 +472,33 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
     </svg>
   )
 
-  const IconStar = ({ filled }) => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill={filled ? "#fbbf24" : "none"} stroke={filled ? "#fbbf24" : "#cbd5e1"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  const IconStar = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   )
 
+  // Optimistic UI state
+  const [displayStars, setDisplayStars] = useState(stars || 0)
+
+  // Sync state with props
+  useEffect(() => {
+    setDisplayStars(stars || 0)
+  }, [stars])
+
   const handleStarChange = async (delta) => {
     if (!isManager) return
 
-    const currentStars = typeof stars === 'number' ? stars : (stars ? 1 : 0)
-    const newStarCount = Math.max(0, currentStars + delta) // Prevent negative stars
+    const currentStars = typeof displayStars === 'number' ? displayStars : (displayStars ? 1 : 0)
+    const newStarCount = Math.max(0, Math.min(10, currentStars + delta)) // Limit between 0 and 10
+
+    // Optimistic update
+    const previousStars = displayStars
+    setDisplayStars(newStarCount)
+    console.log("Optimistic star update:", newStarCount);
 
     try {
-      const url = `${API_URL}/api/employees/${employee.empid || employee.id}`
+      const url = `${API_URL}/api/employees/${employee.empid || employee.id}/stars`
       const res = await fetch(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -494,7 +508,9 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
       if (onRefresh) onRefresh()
     } catch (err) {
       console.error("Star update failed", err)
-      alert("Failed to update star count")
+      // Revert on failure
+      setDisplayStars(previousStars)
+      alert("Failed to update star count. Please try again.")
     }
   }
 
@@ -550,7 +566,7 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}> {/* Wrap name block to allow flex grow */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div style={styles.nameBlock}>
                 <h3 style={styles.name}>{name}</h3>
                 <p style={styles.subtitle}>
@@ -565,27 +581,93 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
                     <span style={{ color: "#9ca3af" }}>No role specified</span>
                   )}
                 </p>
+
+                {/* availability stays in header (collapsed view shows this) */}
+                <div style={{ marginTop: 6 }}>
+                  <div style={{ ...styles.infoRow, alignItems: "center" }} aria-label={`Status: ${availability}`}>
+                    <span style={{ ...styles.statusDot, background: statusColor }} />
+                    <strong style={{ fontSize: "13px", color: "#374151", fontWeight: 600, whiteSpace: "nowrap" }}>{availability}</strong>
+                  </div>
+
+                  {/* Updated text - below availability, only in collapsed view */}
+                  {!expanded && updatedText && (
+                    <div
+                      style={{
+                        ...styles.updatedText,
+                        color: getUpdateColor(updated_at),
+                      }}
+                      aria-live="polite"
+                    >
+                      {updatedText}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* availability stays in header (collapsed view shows this) */}
-              <div style={{ marginTop: 10 }}>
-                <div style={{ ...styles.infoRow, alignItems: "center" }} aria-label={`Status: ${availability}`}>
-                  <span style={{ ...styles.statusDot, background: statusColor }} />
-                  <strong style={{ fontSize: "13px", color: "#374151", fontWeight: 600 }}>{availability}</strong>
-                </div>
-
-                {/* Updated text - below availability, only in collapsed view */}
-                {!expanded && updatedText && (
-                  <div
-                    style={{
-                      ...styles.updatedText,
-                      color: getUpdateColor(updated_at),
-                    }}
-                    aria-live="polite"
-                  >
-                    {updatedText}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                {/* Star Counter with Vertical Arrows */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    background: "#fff",
+                    padding: "2px 6px",
+                    borderRadius: "6px",
+                    border: "1px solid #f1f5f9",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span style={{ fontSize: "15px", fontWeight: "700", color: "#334155" }}>{displayStars}</span>
+                    <IconStar filled={displayStars > 0} />
                   </div>
-                )}
+
+                  {isManager && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleStarChange(1); }}
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                          padding: "0",
+                          lineHeight: "1",
+                          color: "#64748b",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          height: "10px"
+                        }}
+                        title="Increase"
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 15l-6-6-6 6" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleStarChange(-1); }}
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                          padding: "0",
+                          lineHeight: "1",
+                          color: "#64748b",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          height: "10px"
+                        }}
+                        title="Decrease"
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M6 9l6 6 6-6" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -630,13 +712,17 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
                   <div style={styles.editGrid}>
                     <div style={styles.editField}>
                       <label style={styles.editLabel}>Hours/Day</label>
-                      <input
+                      <select
                         style={styles.editInput}
-                        type="number"
-                        placeholder="e.g. 4"
                         value={formData.hours_available}
                         onChange={e => setFormData({ ...formData, hours_available: e.target.value })}
-                      />
+                      >
+                        <option value="">Select Hours</option>
+                        <option value="2 hours">2 hours</option>
+                        <option value="4 hours">4 hours</option>
+                        <option value="6 hours">6 hours</option>
+                        <option value="Full Day">Full Day</option>
+                      </select>
                     </div>
                     <div style={styles.editField}>
                       <label style={styles.editLabel}>From Date</label>
