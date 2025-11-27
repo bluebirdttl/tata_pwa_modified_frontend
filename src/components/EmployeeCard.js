@@ -22,6 +22,7 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
     from_date,
     to_date,
     updated_at,
+    stars,
   } = employee || {}
 
   // Initialize form data when entering edit mode
@@ -470,6 +471,33 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
     </svg>
   )
 
+  const IconStar = ({ filled }) => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill={filled ? "#fbbf24" : "none"} stroke={filled ? "#fbbf24" : "#cbd5e1"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  )
+
+  const handleStarChange = async (delta) => {
+    if (!isManager) return
+
+    const currentStars = typeof stars === 'number' ? stars : (stars ? 1 : 0)
+    const newStarCount = Math.max(0, currentStars + delta) // Prevent negative stars
+
+    try {
+      const url = `${API_URL}/api/employees/${employee.empid || employee.id}`
+      const res = await fetch(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stars: newStarCount })
+      })
+      if (!res.ok) throw new Error("Failed to update star count")
+      if (onRefresh) onRefresh()
+    } catch (err) {
+      console.error("Star update failed", err)
+      alert("Failed to update star count")
+    }
+  }
+
   const statusKey = (availability || "").toString().toLowerCase()
 
   // Calculate staleness
@@ -521,40 +549,44 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
             {getInitials ? getInitials(name) : (name || "U").slice(0, 1).toUpperCase()}
           </div>
 
-          <div style={styles.nameBlock}>
-            <h3 style={styles.name}>{name}</h3>
-            <p style={styles.subtitle}>
-              {role ? (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <span style={styles.iconWrap}>
-                    <IconBriefcase />
-                  </span>
-                  <span>{role}</span>
-                </span>
-              ) : (
-                <span style={{ color: "#9ca3af" }}>No role specified</span>
-              )}
-            </p>
-
-            {/* availability stays in header (collapsed view shows this) */}
-            <div style={{ marginTop: 10 }}>
-              <div style={{ ...styles.infoRow, alignItems: "center" }} aria-label={`Status: ${availability}`}>
-                <span style={{ ...styles.statusDot, background: statusColor }} />
-                <strong style={{ fontSize: "13px", color: "#374151", fontWeight: 600 }}>{availability}</strong>
+          <div style={{ flex: 1, minWidth: 0 }}> {/* Wrap name block to allow flex grow */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={styles.nameBlock}>
+                <h3 style={styles.name}>{name}</h3>
+                <p style={styles.subtitle}>
+                  {role ? (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      <span style={styles.iconWrap}>
+                        <IconBriefcase />
+                      </span>
+                      <span>{role}</span>
+                    </span>
+                  ) : (
+                    <span style={{ color: "#9ca3af" }}>No role specified</span>
+                  )}
+                </p>
               </div>
 
-              {/* Updated text - below availability, only in collapsed view */}
-              {!expanded && updatedText && (
-                <div
-                  style={{
-                    ...styles.updatedText,
-                    color: getUpdateColor(updated_at),
-                  }}
-                  aria-live="polite"
-                >
-                  {updatedText}
+              {/* availability stays in header (collapsed view shows this) */}
+              <div style={{ marginTop: 10 }}>
+                <div style={{ ...styles.infoRow, alignItems: "center" }} aria-label={`Status: ${availability}`}>
+                  <span style={{ ...styles.statusDot, background: statusColor }} />
+                  <strong style={{ fontSize: "13px", color: "#374151", fontWeight: 600 }}>{availability}</strong>
                 </div>
-              )}
+
+                {/* Updated text - below availability, only in collapsed view */}
+                {!expanded && updatedText && (
+                  <div
+                    style={{
+                      ...styles.updatedText,
+                      color: getUpdateColor(updated_at),
+                    }}
+                    aria-live="polite"
+                  >
+                    {updatedText}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
