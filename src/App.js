@@ -8,6 +8,9 @@ import DetailScreen from "./screens/DetailScreen"
 import DashboardPage from "./screens/DashboardPage"
 import ResetPasswordScreen from "./screens/ResetPasswordScreen"
 
+import ActivitiesScreen from "./screens/ActivitiesScreen"
+import InlineActivitiesScreen from "./screens/InlineActivitiesScreen"
+
 export default function App() {
   // initialize from sessionStorage so reload keeps logged-in user
   const initialUser = (() => {
@@ -20,7 +23,7 @@ export default function App() {
   })()
 
   const [user, setUser] = useState(initialUser)
-  console.log("[App] Current user state:", user);
+  // console.log("[App] Current user state:", user);
 
   const handleLogin = (userData) => {
     try {
@@ -109,6 +112,26 @@ export default function App() {
           path="/reset-password"
           element={
             user ? <ResetPasswordRoute user={user} onLogout={handleLogout} /> : <Navigate to="/" />
+          }
+        />
+
+        {/* Activities route wrapper (Manager only) */}
+        <Route
+          path="/activities"
+          element={
+            user ? (
+              (user.role_type || "").trim().toLowerCase() === "manager" ? <ActivitiesScreen onLogout={handleLogout} /> : <Navigate to="/home" />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        {/* Inline Activities route wrapper (User only) */}
+        <Route
+          path="/inline-activities"
+          element={
+            user ? <InlineActivitiesScreen onLogout={handleLogout} /> : <Navigate to="/" />
           }
         />
 

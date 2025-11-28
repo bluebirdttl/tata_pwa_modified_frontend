@@ -65,8 +65,8 @@ export default function Navbar_Manager({ user, onLogout, title = "Employee Dashb
             background: "linear-gradient(90deg, #016db9 0%, #0078d4 100%)",
             color: "white",
             padding: isMobile ? "10px 12px" : "12px 16px",
-            borderRadius: "8px",
-            marginBottom: "16px",
+            borderRadius: "0", // Full width
+            marginBottom: "0", // Flush with container
             gap: "12px",
             position: "relative",
         },
@@ -234,6 +234,44 @@ export default function Navbar_Manager({ user, onLogout, title = "Employee Dashb
                     style={styles.drawerMenuItem}
                     onClick={() => {
                         setMenuOpen(false)
+                        navigate("/activities")
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.1)"
+                        e.currentTarget.style.borderLeft = "4px solid #ffffff"
+                        e.currentTarget.style.color = "#ffffff"
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent"
+                        e.currentTarget.style.borderLeft = "4px solid transparent"
+                        e.currentTarget.style.color = "rgba(255,255,255,0.9)"
+                    }}
+                >
+                    <span>📅</span> Activities
+                </div>
+                <div
+                    style={styles.drawerMenuItem}
+                    onClick={() => {
+                        setMenuOpen(false)
+                        navigate("/inline-activities")
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.1)"
+                        e.currentTarget.style.borderLeft = "4px solid #ffffff"
+                        e.currentTarget.style.color = "#ffffff"
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent"
+                        e.currentTarget.style.borderLeft = "4px solid transparent"
+                        e.currentTarget.style.color = "rgba(255,255,255,0.9)"
+                    }}
+                >
+                    <span>📋</span> Inline Activities
+                </div>
+                <div
+                    style={styles.drawerMenuItem}
+                    onClick={() => {
+                        setMenuOpen(false)
                         window.open("https://forms.office.com/Pages/ResponsePage.aspx?id=YHed29djiE-ZJ_q-RG4jYu30tAiE4QZGndZ48sb8fWhUOTAxN0RFT0RCRzVXUDZYWEc1RUhORE1RSi4u&fswReload=1&fswNavStart=1764070424016", "_blank")
                     }}
                     onMouseEnter={(e) => {
@@ -317,6 +355,7 @@ export default function Navbar_Manager({ user, onLogout, title = "Employee Dashb
                                     onClick={() => {
                                         setProfileOpen(false)
                                         onLogout && onLogout()
+                                        navigate("/")
                                     }}
                                     onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f8ff")}
                                     onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}

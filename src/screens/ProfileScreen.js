@@ -216,8 +216,11 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
     page: {
       minHeight: "100vh",
       background: "linear-gradient(180deg, #f4f7fb 0%, #ffffff 40%)", // modern soft gradient
-      padding: isMobile ? "8px 12px" : "12px 20px",
+      padding: "0", // Removed padding for full width Navbar
       fontFamily: "Segoe UI, Tahoma, sans-serif",
+    },
+    innerPage: {
+      padding: isMobile ? "8px 12px" : "12px 20px",
     },
 
 
@@ -285,93 +288,95 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
       {/* Hidden uploaded screenshot path (developer requested path) */}
       <img src="/mnt/data/5438abe0-f333-4e41-8233-b5ea2387a27d.png" alt="hidden" style={{ display: "none" }} />
 
-      {/* Profile card */}
-      <div style={styles.container} role="region" aria-label="Profile screen">
-        <div style={styles.headerRow}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={styles.pageTitle}>Profile</div>
-            {/* Star Display */}
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#fffbeb", padding: "4px 10px", borderRadius: "20px", border: "1px solid #fcd34d" }}>
-              <span style={{ fontSize: "16px", fontWeight: "700", color: "#b45309" }}>{employee?.stars || 0}</span>
-              <IconStar />
+      <div style={styles.innerPage}>
+        {/* Profile card */}
+        <div style={styles.container} role="region" aria-label="Profile screen">
+          <div style={styles.headerRow}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={styles.pageTitle}>Profile</div>
+              {/* Star Display */}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#fffbeb", padding: "4px 10px", borderRadius: "20px", border: "1px solid #fcd34d" }}>
+                <span style={{ fontSize: "16px", fontWeight: "700", color: "#b45309" }}>{employee?.stars || 0}</span>
+                <IconStar />
+              </div>
+            </div>
+
+            {/* Back moved to top-right inside card as requested */}
+            <div>
+              <button style={styles.backBtn} onClick={() => onBack && onBack()}>
+                ← Back
+              </button>
             </div>
           </div>
 
-          {/* Back moved to top-right inside card as requested */}
-          <div>
-            <button style={styles.backBtn} onClick={() => onBack && onBack()}>
-              ← Back
+          {error && <div style={styles.errorBox}>{error}</div>}
+
+          <div style={styles.formRow}>
+            <div style={styles.field}>
+              <label style={styles.label}>Full Name</label>
+              <input
+                style={styles.input}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={() => onBlurField("name")}
+              />
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>Employee ID</label>
+              <input
+                style={styles.input}
+                value={empid}
+                onChange={(e) => setEmpid(e.target.value)}
+                onBlur={() => onBlurField("empid")}
+              />
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>Email</label>
+              <input
+                style={styles.input}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => onBlurField("email")}
+              />
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>Role</label>
+              <select style={styles.select} value={role} onChange={(e) => setRole(e.target.value)}>
+                <option value="">Select role</option>
+                {ROLE.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {role === "Other" && (
+              <div style={styles.field}>
+                <label style={styles.label}>Specify Role</label>
+                <input style={styles.input} value={otherRole} onChange={(e) => setOtherRole(e.target.value)} />
+              </div>
+            )}
+
+            <div style={styles.field}>
+              <label style={styles.label}>Cluster</label>
+              <select style={styles.select} value={cluster} onChange={(e) => setCluster(e.target.value)}>
+                <option value="">Select cluster</option>
+                {CLUSTER.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+
+
+          </div>
+
+          <div style={styles.actions}>
+            <button style={styles.saveBtn} onClick={handleSave} disabled={saving}>
+              {saving ? "Saving..." : "Save Profile"}
             </button>
           </div>
-        </div>
-
-        {error && <div style={styles.errorBox}>{error}</div>}
-
-        <div style={styles.formRow}>
-          <div style={styles.field}>
-            <label style={styles.label}>Full Name</label>
-            <input
-              style={styles.input}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={() => onBlurField("name")}
-            />
-          </div>
-
-          <div style={styles.field}>
-            <label style={styles.label}>Employee ID</label>
-            <input
-              style={styles.input}
-              value={empid}
-              onChange={(e) => setEmpid(e.target.value)}
-              onBlur={() => onBlurField("empid")}
-            />
-          </div>
-
-          <div style={styles.field}>
-            <label style={styles.label}>Email</label>
-            <input
-              style={styles.input}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onBlur={() => onBlurField("email")}
-            />
-          </div>
-
-          <div style={styles.field}>
-            <label style={styles.label}>Role</label>
-            <select style={styles.select} value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="">Select role</option>
-              {ROLE.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {role === "Other" && (
-            <div style={styles.field}>
-              <label style={styles.label}>Specify Role</label>
-              <input style={styles.input} value={otherRole} onChange={(e) => setOtherRole(e.target.value)} />
-            </div>
-          )}
-
-          <div style={styles.field}>
-            <label style={styles.label}>Cluster</label>
-            <select style={styles.select} value={cluster} onChange={(e) => setCluster(e.target.value)}>
-              <option value="">Select cluster</option>
-              {CLUSTER.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-
-
-        </div>
-
-        <div style={styles.actions}>
-          <button style={styles.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save Profile"}
-          </button>
         </div>
       </div>
     </div>

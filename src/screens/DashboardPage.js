@@ -72,18 +72,15 @@ export default function DashboardPage() {
             minHeight: "100vh",
             background: "#f3f4f6",
             fontFamily: "Segoe UI, Tahoma, sans-serif",
-            padding: isMobile ? "8px 12px" : "12px 20px",
+            padding: "0", // Removed padding for full width Navbar
         },
-        navWrapper: {
-            marginBottom: 18,
-            background: "linear-gradient(90deg, #016db9 0%, #0078d4 100%)",
-            borderRadius: 10,
-            boxShadow: "0 6px 18px rgba(3, 45, 85, 0.06)",
+        // navWrapper removed as it's no longer needed
+        innerContainer: {
+            padding: isMobile ? "8px 12px" : "12px 20px",
         },
         container: {
             maxWidth: "1200px",
             margin: "0 auto",
-            // padding removed here as page handles it
         },
         pageHeader: {
             fontSize: "24px",
@@ -487,65 +484,65 @@ export default function DashboardPage() {
 
     return (
         <div style={styles.page}>
-            <div style={styles.navWrapper}>
-                <Navbar user={user} onLogout={handleLogout} title="Manager Dashboard" />
-            </div>
+            <Navbar user={user} onLogout={handleLogout} title="Manager Dashboard" />
 
-            <div style={styles.container}>
-                <h1 style={styles.pageHeader}>Dashboard</h1>
+            <div style={styles.innerContainer}>
+                <div style={styles.container}>
+                    <h1 style={styles.pageHeader}>Dashboard</h1>
 
-                {error && (
-                    <div style={{
-                        padding: "12px",
-                        background: "#fee2e2",
-                        color: "#b91c1c",
-                        borderRadius: "8px",
-                        marginBottom: "24px",
-                        border: "1px solid #fca5a5"
-                    }}>
-                        Error loading data: {error}
+                    {error && (
+                        <div style={{
+                            padding: "12px",
+                            background: "#fee2e2",
+                            color: "#b91c1c",
+                            borderRadius: "8px",
+                            marginBottom: "24px",
+                            border: "1px solid #fca5a5"
+                        }}>
+                            Error loading data: {error}
+                        </div>
+                    )}
+
+                    <div style={styles.grid}>
+                        {/* 1. Capacity Overview */}
+                        <ChartCard
+                            title="Capacity Overview"
+                            action={
+                                <select
+                                    value={capacityFilter}
+                                    onChange={(e) => setCapacityFilter(e.target.value)}
+                                    style={{
+                                        padding: "8px 12px",
+                                        borderRadius: "8px",
+                                        border: "1px solid #e5e7eb",
+                                        fontSize: "13px",
+                                        outline: "none",
+                                        cursor: "pointer",
+                                        background: "#f9fafb",
+                                        color: "#374151",
+                                        fontWeight: "500"
+                                    }}
+                                >
+                                    <option value="All">All Time</option>
+                                    <option value="Daily">Today</option>
+                                    <option value="Weekly">This Week</option>
+                                    <option value="Monthly">This Month</option>
+                                </select>
+                            }
+                        >
+                            <VerticalBarChart data={metrics.partialHoursDistribution} color="#f59e0b" />
+                        </ChartCard>
+
+                        {/* 2. Users per Cluster */}
+                        <ChartCard title="Users per Cluster">
+                            <HorizontalBarChart data={metrics.clusters} color="#3b82f6" />
+                        </ChartCard>
+
+                        {/* 3. Users per Role */}
+                        <ChartCard title="Users per Role">
+                            <PieChart data={metrics.roles} />
+                        </ChartCard>
                     </div>
-                )}
-
-                <div style={styles.grid}>
-                    {/* 1. Capacity Overview */}
-                    <ChartCard
-                        title="Capacity Overview"
-                        action={
-                            <select
-                                value={capacityFilter}
-                                onChange={(e) => setCapacityFilter(e.target.value)}
-                                style={{
-                                    padding: "8px 12px",
-                                    borderRadius: "8px",
-                                    border: "1px solid #e5e7eb",
-                                    fontSize: "13px",
-                                    outline: "none",
-                                    cursor: "pointer",
-                                    background: "#f9fafb",
-                                    color: "#374151",
-                                    fontWeight: "500"
-                                }}
-                            >
-                                <option value="All">All Time</option>
-                                <option value="Daily">Today</option>
-                                <option value="Weekly">This Week</option>
-                                <option value="Monthly">This Month</option>
-                            </select>
-                        }
-                    >
-                        <VerticalBarChart data={metrics.partialHoursDistribution} color="#f59e0b" />
-                    </ChartCard>
-
-                    {/* 2. Users per Cluster */}
-                    <ChartCard title="Users per Cluster">
-                        <HorizontalBarChart data={metrics.clusters} color="#3b82f6" />
-                    </ChartCard>
-
-                    {/* 3. Users per Role */}
-                    <ChartCard title="Users per Role">
-                        <PieChart data={metrics.roles} />
-                    </ChartCard>
                 </div>
             </div>
         </div>

@@ -28,7 +28,7 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
   // Initialize form data when entering edit mode
   useEffect(() => {
     if (isEditing) {
-      console.log("EmployeeCard: Edit mode activated");
+      // console.log("EmployeeCard: Edit mode activated");
       setFormData({
         current_project: employee.current_project || employee.currentProject || "",
         availability: employee.availability || "Occupied",
@@ -41,6 +41,24 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
       })
     }
   }, [isEditing, employee])
+
+  // Enforce: No Project -> Available
+  // Enforce: No Project -> Available, Project -> Not Available
+  useEffect(() => {
+    if (isEditing) {
+      if (!formData.current_project || !formData.current_project.trim()) {
+        // No project => Force Available
+        if (formData.availability && formData.availability !== "Available") {
+          setFormData(prev => ({ ...prev, availability: "Available" }))
+        }
+      } else {
+        // Has project => Force NOT Available (if it was Available)
+        if (formData.availability === "Available") {
+          setFormData(prev => ({ ...prev, availability: "Occupied" }))
+        }
+      }
+    }
+  }, [formData.current_project, isEditing, formData.availability])
 
   // robust parsing for SheetDB
   const parseListField = (val) => {
@@ -64,6 +82,40 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
     }
     return []
   }
+
+  // ---------- date helpers ----------
+  const todayISO = () => {
+    const t = new Date()
+    const y = t.getFullYear()
+    const m = String(t.getMonth() + 1).padStart(2, "0")
+    const d = String(t.getDate()).padStart(2, "0")
+    return `${y}-${m}-${d}`
+  }
+
+  const isoToDate = (iso) => {
+    if (!iso) return null
+    const parts = iso.split("-").map((p) => parseInt(p, 10))
+    if (parts.length !== 3 || parts.some(isNaN)) return null
+    return new Date(parts[0], parts[1] - 1, parts[2])
+  }
+
+  const isWeekend = (isoDate) => {
+    const d = isoToDate(isoDate)
+    if (!d) return false
+    const day = d.getDay()
+    return day === 0 || day === 6 // Sunday=0, Saturday=6
+  }
+
+  const daysBetween = (aIso, bIso) => {
+    const a = isoToDate(aIso)
+    const b = isoToDate(bIso)
+    if (!a || !b) return null
+    const diffMs = Math.abs(b.setHours(0, 0, 0, 0) - a.setHours(0, 0, 0, 0))
+    return Math.round(diffMs / (1000 * 60 * 60 * 24))
+  }
+
+  const maxSeparationDays = 365
+  // ---------- END date helpers ----------
 
   const safeSkills = parseListField(current_skills)
   const safeInterests = parseListField(interests)
@@ -156,9 +208,104 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
 
   const updatedText = getUpdatedText(updated_at)
 
+
+
+  // ---------- date change handlers with validations ----------
+  const handleFromDateChange = (iso) => {
+    setDateError("")
+    if (!iso) {
+      setFormData({ ...formData, from_date: "" })
+      return
+    }
+
+    // from must be >= today
+    const today = todayISO()
+    if (isoToDate(iso) < isoToDate(today)) {
+      setDateError("From date cannot be earlier than today.")
+      return // Reject change
+    }
+
+    // no weekends
+    if (isWeekend(iso)) {
+      setDateError("Weekends are disabled. Please select a weekday.")
+      return // Reject change
+    }
+
+    // if toDate exists, ensure from <= to
+    if (formData.to_date) {
+      if (isoToDate(iso) > isoToDate(formData.to_date)) {
+        setDateError("From date cannot be after To date.")
+        return // Reject change
+      }
+
+      const diff = daysBetween(iso, formData.to_date)
+      if (diff !== null && diff > maxSeparationDays) {
+        setDateError("Separation between From and To cannot exceed 1 year.")
+        return // Reject change
+      }
+    }
+
+    // Valid -> Update state
+    setFormData({ ...formData, from_date: iso })
+  }
+
+  const handleToDateChange = (iso) => {
+    setDateError("")
+    if (!iso) {
+      setFormData({ ...formData, to_date: "" })
+      return
+    }
+
+    // no weekends
+    if (isWeekend(iso)) {
+      setDateError("Weekends are disabled. Please select a weekday.")
+      return // Reject change
+    }
+
+    // if fromDate exists, ensure to >= from
+    if (formData.from_date) {
+      if (isoToDate(iso) < isoToDate(formData.from_date)) {
+        setDateError("To date cannot be earlier than From date.")
+        return // Reject change
+      }
+
+      const diff = daysBetween(formData.from_date, iso)
+      if (diff !== null && diff > maxSeparationDays) {
+        setDateError("Separation between From and To cannot exceed 1 year.")
+        return // Reject change
+      }
+    } else {
+      // if fromDate not set, ensure toDate is >= today
+      const today = todayISO()
+      if (isoToDate(iso) < isoToDate(today)) {
+        setDateError("To date cannot be earlier than today.")
+        return // Reject change
+      }
+    }
+
+    // Valid -> Update state
+    setFormData({ ...formData, to_date: iso })
+  }
+
+  // validation derived from formData
+  const validationErrors = {
+    hours: (formData.availability === "Partially Available" && (!formData.hours_available || isNaN(Number(formData.hours_available)))) ? "Specify hours" : "",
+    fromDate: (formData.availability === "Partially Available" && !formData.from_date) ? "From date required" : "",
+    toDate: (formData.availability === "Partially Available" && !formData.to_date) ? "To date required" : "",
+  }
+  const isValid = () => !Object.values(validationErrors).some(Boolean) && !dateError
+
   // --- Edit Handlers ---
   const handleSave = async (e) => {
     e.stopPropagation()
+
+    if (formData.availability === "Partially Available") {
+      if (!isValid()) {
+        alert("Please fix validation errors before saving.")
+        return
+      }
+    }
+
     setSaving(true)
     try {
       const payload = {
@@ -495,7 +642,7 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
     // Optimistic update
     const previousStars = displayStars
     setDisplayStars(newStarCount)
-    console.log("Optimistic star update:", newStarCount);
+    // console.log("Optimistic star update:", newStarCount);
 
     try {
       const url = `${API_URL}/api/employees/${employee.empid || employee.id}/stars`
@@ -686,7 +833,7 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
                   <label style={styles.editLabel}>Current Project</label>
                   <input
                     style={styles.editInput}
-                    value={formData.current_project}
+                    value={formData.current_project || ""}
                     onChange={e => setFormData({ ...formData, current_project: e.target.value })}
                     placeholder="Project Name"
                   />
@@ -696,51 +843,65 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
                   <label style={styles.editLabel}>Availability</label>
                   <select
                     style={styles.editInput}
-                    value={formData.availability}
+                    value={formData.availability || "Occupied"}
                     onChange={e => setFormData({ ...formData, availability: e.target.value })}
+                    disabled={!formData.current_project || !formData.current_project.trim()}
                   >
-                    <option value="Available">Available</option>
+                    <option value="Available" disabled={!!(formData.current_project && formData.current_project.trim())}>Available</option>
                     <option value="Occupied">Occupied</option>
                     <option value="Partially Available">Partially Available</option>
                   </select>
                 </div>
               </div>
+              {(!formData.current_project || !formData.current_project.trim()) && (
+                <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "4px", paddingLeft: "4px" }}>
+                  Requires Current Project to change availability
+                </div>
+              )}
 
               {formData.availability === "Partially Available" && (
                 <div style={styles.partialBox}>
                   <div style={styles.editSectionTitle}>Partial Availability Details</div>
+
+                  {dateError && <div style={{ color: "#d32f2f", fontSize: "13px", marginBottom: "8px", fontWeight: "600" }}>{dateError}</div>}
+
                   <div style={styles.editGrid}>
                     <div style={styles.editField}>
                       <label style={styles.editLabel}>Hours/Day</label>
                       <select
                         style={styles.editInput}
-                        value={formData.hours_available}
+                        value={formData.hours_available || ""}
                         onChange={e => setFormData({ ...formData, hours_available: e.target.value })}
                       >
                         <option value="">Select Hours</option>
-                        <option value="2 hours">2 hours</option>
-                        <option value="4 hours">4 hours</option>
-                        <option value="6 hours">6 hours</option>
-                        <option value="Full Day">Full Day</option>
+                        <option value="2">2 hours</option>
+                        <option value="4">4 hours</option>
+                        <option value="6">6 hours</option>
+                        <option value="8">Full Day</option>
                       </select>
+                      {validationErrors.hours && <div style={{ color: "#d32f2f", fontSize: "11px" }}>{validationErrors.hours}</div>}
                     </div>
                     <div style={styles.editField}>
                       <label style={styles.editLabel}>From Date</label>
                       <input
                         style={styles.editInput}
                         type="date"
-                        value={formData.from_date}
-                        onChange={e => setFormData({ ...formData, from_date: e.target.value })}
+                        value={formData.from_date || ""}
+                        onChange={e => handleFromDateChange(e.target.value)}
+                        min={todayISO()}
                       />
+                      {validationErrors.fromDate && <div style={{ color: "#d32f2f", fontSize: "11px" }}>{validationErrors.fromDate}</div>}
                     </div>
                     <div style={styles.editField}>
                       <label style={styles.editLabel}>To Date</label>
                       <input
                         style={styles.editInput}
                         type="date"
-                        value={formData.to_date}
-                        onChange={e => setFormData({ ...formData, to_date: e.target.value })}
+                        value={formData.to_date || ""}
+                        onChange={e => handleToDateChange(e.target.value)}
+                        min={formData.from_date || todayISO()}
                       />
+                      {validationErrors.toDate && <div style={{ color: "#d32f2f", fontSize: "11px" }}>{validationErrors.toDate}</div>}
                     </div>
                   </div>
                 </div>
@@ -927,9 +1088,10 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
             </>
           )}
         </div>
-      )}
+      )
+      }
 
       <div style={styles.footerHint}>Click to expand →</div>
-    </div>
+    </div >
   )
 }
