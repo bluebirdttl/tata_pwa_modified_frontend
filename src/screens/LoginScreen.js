@@ -53,12 +53,10 @@ export default function LoginScreen({ onLogin }) {
         // Call onLogin with user object (frontend state)
         if (typeof onLogin === "function") onLogin(data.user);
 
-        // alert("DEBUG USER DATA:\n" + JSON.stringify(data.user, null, 2));
-
         // Redirect based on role_type
         const role_type = (data.user?.role_type || "").trim().toLowerCase();
-        if (role_type === "Manager") {
-          navigate("/home");
+        if (role_type === "manager") {
+          navigate("/dashboard");
         } else {
           navigate("/details");
         }
@@ -164,11 +162,6 @@ export default function LoginScreen({ onLogin }) {
           {loading ? "Loading..." : isLogin ? "Login" : "Create account"}
         </button>
       </form>
-
-      {/* Toggle signup/login if you need it later */}
-      {/* <div style={styles.toggle} onClick={() => !loading && setIsLogin(!isLogin)}>
-        {isLogin ? "Create a new account" : "Already have an account? Login"}
-      </div> */}
 
       <p style={styles.footer}>© 2025 Tata Technologies</p>
     </div>

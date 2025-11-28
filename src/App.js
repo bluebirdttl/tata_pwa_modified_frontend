@@ -5,6 +5,7 @@ import LoginScreen from "./screens/LoginScreen"
 import HomeScreen from "./screens/HomeScreen"
 import ProfileScreen from "./screens/ProfileScreen"
 import DetailScreen from "./screens/DetailScreen"
+import DashboardPage from "./screens/DashboardPage"
 import ResetPasswordScreen from "./screens/ResetPasswordScreen"
 
 export default function App() {
@@ -62,7 +63,19 @@ export default function App() {
       <Routes>
         <Route
           path="/"
-          element={!user ? <LoginScreen onLogin={(u) => handleLogin(u)} /> : <Navigate to={(user.role_type || "").trim().toLowerCase() === "manager" ? "/home" : "/details"} />}
+          element={!user ? <LoginScreen onLogin={(u) => handleLogin(u)} /> : <Navigate to={(user.role_type || "").trim().toLowerCase() === "manager" ? "/dashboard" : "/details"} />}
+        />
+
+        {/* /dashboard route for Managers */}
+        <Route
+          path="/dashboard"
+          element={
+            user ? (
+              (user.role_type || "").trim().toLowerCase() === "manager" ? <DashboardPage /> : <Navigate to="/details" />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
         />
 
         {/* /home route - keeps previous UX where Profile is toggled inside home */}

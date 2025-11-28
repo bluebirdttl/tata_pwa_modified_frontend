@@ -335,7 +335,7 @@ export default function HomeScreen({ onLogout, employee }) {
     },
     grid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+      gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(350px, 1fr))",
       gap: "20px",
     },
     noResults: {
