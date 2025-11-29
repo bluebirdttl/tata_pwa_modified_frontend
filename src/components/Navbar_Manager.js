@@ -355,7 +355,6 @@ export default function Navbar_Manager({ user, onLogout, title = "Employee Dashb
                                     onClick={() => {
                                         setProfileOpen(false)
                                         onLogout && onLogout()
-                                        navigate("/")
                                     }}
                                     onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f8ff")}
                                     onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
