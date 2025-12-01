@@ -29,7 +29,7 @@ export default function App() {
     try {
       sessionStorage.setItem("user", JSON.stringify(userData || {}))
     } catch (e) {
-      console.warn("sessionStorage write failed", e)
+      // console.warn("sessionStorage write failed", e)
     }
     setUser(userData)
   }
@@ -54,7 +54,7 @@ export default function App() {
         const existing = JSON.parse(sessionStorage.getItem("user") || "{}")
         sessionStorage.setItem("user", JSON.stringify({ ...existing, ...(profileOnly || {}) }))
       } catch (e) {
-        console.warn("sessionStorage update failed:", e)
+        // console.warn("sessionStorage update failed:", e)
       }
       return merged
     })
@@ -158,7 +158,7 @@ function DetailsRoute({ user, mergeProfileIntoUser, setUser, onLogout }) {
       const existing = JSON.parse(sessionStorage.getItem("user") || "{}")
       sessionStorage.setItem("user", JSON.stringify({ ...existing, ...(serverRecord || {}) }))
     } catch (e) {
-      console.warn("Failed to update sessionStorage after details save", e)
+      // console.warn("Failed to update sessionStorage after details save", e)
     }
     navigate("/home")
   }

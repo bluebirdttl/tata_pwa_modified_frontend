@@ -47,7 +47,7 @@ export default function LoginScreen({ onLogin }) {
             });
 
             const data = await response.json();
-            console.log("[LoginScreen] Login response:", data);
+
 
             if (!response.ok) {
                 setError(data.error || "Something went wrong");
@@ -69,7 +69,7 @@ export default function LoginScreen({ onLogin }) {
             }
         } catch (err) {
             setError("Failed to connect to server. Make sure backend is running.");
-            console.error("Auth error:", err);
+
         } finally {
             setLoading(false);
         }

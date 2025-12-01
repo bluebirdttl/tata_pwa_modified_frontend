@@ -51,10 +51,10 @@ export default function DashboardPage() {
             })
             if (!res.ok) throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`)
             const data = await res.json()
-            console.log("[Dashboard] Metrics fetched:", data)
+            // console.log("[Dashboard] Metrics fetched:", data)
             setMetrics(data)
         } catch (err) {
-            console.error("Dashboard fetch error:", err)
+            // console.error("Dashboard fetch error:", err)
             setError(err.message)
         } finally {
             setLoading(false)

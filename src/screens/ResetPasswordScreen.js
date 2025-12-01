@@ -60,7 +60,7 @@ export default function ResetPasswordScreen({ user, onLogout }) {
             });
 
             const data = await response.json();
-            console.log("[ResetPassword] Response:", response.status, data);
+            // console.log("[ResetPassword] Response:", response.status, data);
 
             if (response.ok && data.success) {
                 setMessage("Password updated successfully! Redirecting to login...");
@@ -77,7 +77,7 @@ export default function ResetPasswordScreen({ user, onLogout }) {
                 setError(data.error || "Failed to update password.");
             }
         } catch (err) {
-            console.error("Reset password error:", err);
+            // console.error("Reset password error:", err);
             setError("An error occurred. Please try again.");
         } finally {
             setLoading(false);

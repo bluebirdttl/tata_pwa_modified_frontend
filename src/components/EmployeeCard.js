@@ -654,7 +654,7 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
       if (!res.ok) throw new Error("Failed to update star count")
       if (onRefresh) onRefresh()
     } catch (err) {
-      console.error("Star update failed", err)
+
       // Revert on failure
       setDisplayStars(previousStars)
       alert("Failed to update star count. Please try again.")

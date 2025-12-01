@@ -103,7 +103,7 @@ export default function HomeScreen({ onLogout, employee }) {
         }))
       }
     } catch (err) {
-      console.error("[v0] Employee fetch error:", err)
+
       setError(`Failed to load employees: ${err.message}. Make sure backend is running on ${API_URL}`)
     } finally {
       setLoading(false)
