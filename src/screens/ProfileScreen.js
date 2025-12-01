@@ -24,6 +24,7 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
     { label: "M&T", value: "M&T" },
     { label: "S&PS Insitu", value: "S&PS Insitu" },
     { label: "S&PS Exsitu", value: "S&PS Exsitu" },
+    { label: "Multiple", value: "Multiple" },
   ]
 
   const [empid, setEmpid] = useState("")
@@ -31,7 +32,11 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
   const [email, setEmail] = useState("")
   const [role, setRole] = useState("")
   const [otherRole, setOtherRole] = useState("")
-  const [cluster, setCluster] = useState("")
+
+  // Cluster States
+  const [clusterMode, setClusterMode] = useState("") // "MEBM", "Multiple", etc.
+  const [cluster1, setCluster1] = useState("")
+  const [cluster2, setCluster2] = useState("")
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
@@ -61,7 +66,17 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
     setEmail(employee.email || "")
     setRole(employee.role || "")
     setOtherRole(employee.otherRole || employee.other_role || "")
-    setCluster(employee.cluster || "")
+
+    // Cluster Initialization
+    if (employee.cluster2) {
+      setClusterMode("Multiple")
+      setCluster1(employee.cluster || "")
+      setCluster2(employee.cluster2)
+    } else {
+      setClusterMode(employee.cluster || "")
+      setCluster1(employee.cluster || "")
+      setCluster2("")
+    }
   }, [employee])
 
   // Non-destructive background refresh (only fill empty local fields)
@@ -81,9 +96,19 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
           setEmail((cur) => (cur ? cur : obj.email || ""))
           setRole((cur) => (cur ? cur : obj.role || ""))
           setOtherRole((cur) => (cur ? cur : obj.otherRole || obj.other_role || ""))
-          setCluster((cur) => (cur ? cur : obj.cluster || ""))
+
+          // Cluster refresh logic
+          if (obj.cluster2) {
+            setClusterMode(cur => cur ? cur : "Multiple")
+            setCluster1(cur => cur ? cur : (obj.cluster || ""))
+            setCluster2(cur => cur ? cur : obj.cluster2)
+          } else {
+            setClusterMode(cur => cur ? cur : (obj.cluster || ""))
+            setCluster1(cur => cur ? cur : (obj.cluster || ""))
+          }
+
         } catch (e) {
-          console.warn("Profile refresh failed:", e)
+          // console.warn("Profile refresh failed:", e)
         }
       })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,7 +122,7 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
     email: !validateEmail(email) ? "Email format Incorrect" : "",
     role: !role ? "Role required" : "",
     otherRole: role === "Other" && !otherRole.trim() ? "Enter role" : "",
-    cluster: !cluster ? "Cluster required" : "",
+    cluster: !clusterMode ? "Cluster required" : (clusterMode === "Multiple" && (!cluster1 || !cluster2) ? "Both clusters required" : ""),
   }
   const onBlurField = (k) => setTouched((t) => ({ ...t, [k]: true }))
   const isValid = () => !Object.values(errors).some(Boolean)
@@ -150,13 +175,18 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
     setSaving(true)
 
     try {
+      // Determine final cluster values
+      let finalCluster = clusterMode === "Multiple" ? cluster1 : clusterMode;
+      let finalCluster2 = clusterMode === "Multiple" ? cluster2 : null;
+
       const payload = {
         name: name.trim(),
         empid: empid.toString().trim(),
         email: email.trim(),
         role: role === "Other" ? otherRole.trim() : role,
         otherRole: role === "Other" ? otherRole.trim() : "",
-        cluster,
+        cluster: finalCluster,
+        cluster2: finalCluster2,
         updated_at: new Date().toISOString(),
       }
 
@@ -182,7 +212,7 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
       if (!serverRecord) throw new Error("Could not fetch record after save — check backend.")
 
       // Build profile-only object using serverRecord fields (non-destructive)
-      const profileKeys = ["empid", "name", "email", "role", "otherRole", "cluster", "updated_at"]
+      const profileKeys = ["empid", "name", "email", "role", "otherRole", "cluster", "cluster2", "updated_at"]
       const profileOnly = {}
       for (const k of profileKeys) {
         profileOnly[k] =
@@ -194,7 +224,7 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
         const existing = JSON.parse(sessionStorage.getItem("user") || "{}")
         sessionStorage.setItem("user", JSON.stringify({ ...existing, ...profileOnly }))
       } catch (e) {
-        console.warn("sessionStorage merge failed:", e)
+        // console.warn("sessionStorage merge failed:", e)
       }
 
       // Update state and notify parent
@@ -202,7 +232,7 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
       onSaveProfile && onSaveProfile(profileOnly)
       alert("Profile updated and confirmed on server.")
     } catch (err) {
-      console.error("[ProfileScreen] Save error:", err)
+      // console.error("[ProfileScreen] Save error:", err)
       setError(err.message || "Save failed — check console/network")
       setSaving(false)
       alert(`Save failed: ${err.message}. See console/network tab.`)
@@ -361,7 +391,23 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
 
             <div style={styles.field}>
               <label style={styles.label}>Cluster</label>
-              <select style={styles.select} value={cluster} onChange={(e) => setCluster(e.target.value)}>
+              <select
+                style={styles.select}
+                value={clusterMode}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setClusterMode(val);
+                  if (val !== "Multiple") {
+                    setCluster1(val);
+                    setCluster2("");
+                  } else {
+                    // If switching to Multiple, maybe keep existing as cluster1 if it's not Multiple
+                    if (clusterMode !== "Multiple" && clusterMode) {
+                      setCluster1(clusterMode);
+                    }
+                  }
+                }}
+              >
                 <option value="">Select cluster</option>
                 {CLUSTER.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -369,6 +415,37 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
               </select>
             </div>
 
+            {clusterMode === "Multiple" && (
+              <>
+                <div style={styles.field}>
+                  <label style={styles.label}>Cluster 1</label>
+                  <select
+                    style={styles.select}
+                    value={cluster1}
+                    onChange={(e) => setCluster1(e.target.value)}
+                  >
+                    <option value="">Select Cluster 1</option>
+                    {CLUSTER.filter(c => c.value !== "Multiple").map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={styles.field}>
+                  <label style={styles.label}>Cluster 2</label>
+                  <select
+                    style={styles.select}
+                    value={cluster2}
+                    onChange={(e) => setCluster2(e.target.value)}
+                  >
+                    <option value="">Select Cluster 2</option>
+                    {CLUSTER.filter(c => c.value !== "Multiple").map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
 
           </div>
 

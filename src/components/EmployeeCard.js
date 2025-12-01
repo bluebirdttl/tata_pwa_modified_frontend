@@ -702,7 +702,6 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
       onKeyDown={(e) => (e.key === "Enter" || e.key === " " ? handleCardClick(e) : null)}
       aria-expanded={expanded}
     >
-      {/* Availability Strip */}
       <div style={{ height: "4px", width: "100%", background: statusColor, borderTopLeftRadius: "12px", borderTopRightRadius: "12px" }} />
 
       {/* header: name, role, availability */}
@@ -822,273 +821,339 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
       </div>
 
       {/* expanded content */}
-      {expanded && (
-        <div style={styles.body} onClick={e => e.stopPropagation()}>
-          {isEditing ? (
-            // --- EDIT MODE ---
-            // --- EDIT MODE ---
-            <div style={styles.editContainer}>
-              <div style={styles.editGrid}>
+      {
+        expanded && (
+          <div style={styles.body} onClick={e => e.stopPropagation()}>
+            {isEditing ? (
+              // --- EDIT MODE ---
+              <div style={styles.editContainer}>
+                <div style={styles.editGrid}>
+                  <div style={styles.editField}>
+                    <label style={styles.editLabel}>Current Project</label>
+                    <input
+                      style={styles.editInput}
+                      value={formData.current_project || ""}
+                      onChange={e => setFormData({ ...formData, current_project: e.target.value })}
+                      placeholder="Project Name"
+                    />
+                  </div>
+
+                  <div style={styles.editField}>
+                    <label style={styles.editLabel}>Availability</label>
+                    <select
+                      style={styles.editInput}
+                      value={formData.availability || "Occupied"}
+                      onChange={e => setFormData({ ...formData, availability: e.target.value })}
+                      disabled={!formData.current_project || !formData.current_project.trim()}
+                    >
+                      <option value="Available" disabled={!!(formData.current_project && formData.current_project.trim())}>Available</option>
+                      <option value="Occupied">Occupied</option>
+                      <option value="Partially Available">Partially Available</option>
+                    </select>
+                  </div>
+                </div>
+                {(!formData.current_project || !formData.current_project.trim()) && (
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "4px", paddingLeft: "4px" }}>
+                    Requires Current Project to change availability
+                  </div>
+                )}
+
+                {formData.availability === "Partially Available" && (
+                  <div style={styles.partialBox}>
+                    <div style={styles.editSectionTitle}>Partial Availability Details</div>
+
+                    {dateError && <div style={{ color: "#d32f2f", fontSize: "13px", marginBottom: "8px", fontWeight: "600" }}>{dateError}</div>}
+
+                    <div style={styles.editGrid}>
+                      <div style={styles.editField}>
+                        <label style={styles.editLabel}>Hours/Day</label>
+                        <select
+                          style={styles.editInput}
+                          value={formData.hours_available || ""}
+                          onChange={e => setFormData({ ...formData, hours_available: e.target.value })}
+                        >
+                          <option value="">Select Hours</option>
+                          <option value="2">2 hours</option>
+                          <option value="4">4 hours</option>
+                          <option value="6">6 hours</option>
+                          <option value="8">Full Day</option>
+                        </select>
+                        {validationErrors.hours && <div style={{ color: "#d32f2f", fontSize: "11px" }}>{validationErrors.hours}</div>}
+                      </div>
+                      <div style={styles.editField}>
+                        <label style={styles.editLabel}>From Date</label>
+                        <input
+                          style={styles.editInput}
+                          type="date"
+                          value={formData.from_date || ""}
+                          onChange={e => handleFromDateChange(e.target.value)}
+                          min={todayISO()}
+                        />
+                        {validationErrors.fromDate && <div style={{ color: "#d32f2f", fontSize: "11px" }}>{validationErrors.fromDate}</div>}
+                      </div>
+                      <div style={styles.editField}>
+                        <label style={styles.editLabel}>To Date</label>
+                        <input
+                          style={styles.editInput}
+                          type="date"
+                          value={formData.to_date || ""}
+                          onChange={e => handleToDateChange(e.target.value)}
+                          min={formData.from_date || todayISO()}
+                        />
+                        {validationErrors.toDate && <div style={{ color: "#d32f2f", fontSize: "11px" }}>{validationErrors.toDate}</div>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Skills Edit */}
                 <div style={styles.editField}>
-                  <label style={styles.editLabel}>Current Project</label>
+                  <label style={styles.editLabel}>Skills</label>
+                  <div style={styles.tags}>
+                    {(formData.current_skills || []).map(s => (
+                      <span key={s} style={styles.tag}>
+                        {s} <span style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: 4 }} onClick={() => removeTag('current_skills', s)}>×</span>
+                      </span>
+                    ))}
+                  </div>
                   <input
-                    style={styles.editInput}
-                    value={formData.current_project || ""}
-                    onChange={e => setFormData({ ...formData, current_project: e.target.value })}
-                    placeholder="Project Name"
+                    style={{ ...styles.editInput, marginTop: 8 }}
+                    placeholder="Type skill and press Enter..."
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addTag('current_skills', e.target.value.trim())
+                        e.target.value = ''
+                      }
+                    }}
                   />
                 </div>
 
+                {/* Interests Edit */}
                 <div style={styles.editField}>
-                  <label style={styles.editLabel}>Availability</label>
-                  <select
-                    style={styles.editInput}
-                    value={formData.availability || "Occupied"}
-                    onChange={e => setFormData({ ...formData, availability: e.target.value })}
-                    disabled={!formData.current_project || !formData.current_project.trim()}
-                  >
-                    <option value="Available" disabled={!!(formData.current_project && formData.current_project.trim())}>Available</option>
-                    <option value="Occupied">Occupied</option>
-                    <option value="Partially Available">Partially Available</option>
-                  </select>
-                </div>
-              </div>
-              {(!formData.current_project || !formData.current_project.trim()) && (
-                <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "4px", paddingLeft: "4px" }}>
-                  Requires Current Project to change availability
-                </div>
-              )}
-
-              {formData.availability === "Partially Available" && (
-                <div style={styles.partialBox}>
-                  <div style={styles.editSectionTitle}>Partial Availability Details</div>
-
-                  {dateError && <div style={{ color: "#d32f2f", fontSize: "13px", marginBottom: "8px", fontWeight: "600" }}>{dateError}</div>}
-
-                  <div style={styles.editGrid}>
-                    <div style={styles.editField}>
-                      <label style={styles.editLabel}>Hours/Day</label>
-                      <select
-                        style={styles.editInput}
-                        value={formData.hours_available || ""}
-                        onChange={e => setFormData({ ...formData, hours_available: e.target.value })}
-                      >
-                        <option value="">Select Hours</option>
-                        <option value="2">2 hours</option>
-                        <option value="4">4 hours</option>
-                        <option value="6">6 hours</option>
-                        <option value="8">Full Day</option>
-                      </select>
-                      {validationErrors.hours && <div style={{ color: "#d32f2f", fontSize: "11px" }}>{validationErrors.hours}</div>}
-                    </div>
-                    <div style={styles.editField}>
-                      <label style={styles.editLabel}>From Date</label>
-                      <input
-                        style={styles.editInput}
-                        type="date"
-                        value={formData.from_date || ""}
-                        onChange={e => handleFromDateChange(e.target.value)}
-                        min={todayISO()}
-                      />
-                      {validationErrors.fromDate && <div style={{ color: "#d32f2f", fontSize: "11px" }}>{validationErrors.fromDate}</div>}
-                    </div>
-                    <div style={styles.editField}>
-                      <label style={styles.editLabel}>To Date</label>
-                      <input
-                        style={styles.editInput}
-                        type="date"
-                        value={formData.to_date || ""}
-                        onChange={e => handleToDateChange(e.target.value)}
-                        min={formData.from_date || todayISO()}
-                      />
-                      {validationErrors.toDate && <div style={{ color: "#d32f2f", fontSize: "11px" }}>{validationErrors.toDate}</div>}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Skills Edit */}
-              <div style={styles.editField}>
-                <label style={styles.editLabel}>Skills</label>
-                <div style={styles.tags}>
-                  {(formData.current_skills || []).map(s => (
-                    <span key={s} style={styles.tag}>
-                      {s} <span style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: 4 }} onClick={() => removeTag('current_skills', s)}>×</span>
-                    </span>
-                  ))}
-                </div>
-                <input
-                  style={{ ...styles.editInput, marginTop: 8 }}
-                  placeholder="Type skill and press Enter..."
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addTag('current_skills', e.target.value.trim())
-                      e.target.value = ''
-                    }
-                  }}
-                />
-              </div>
-
-              {/* Interests Edit */}
-              <div style={styles.editField}>
-                <label style={styles.editLabel}>Interests</label>
-                <div style={styles.tags}>
-                  {(formData.interests || []).map(i => (
-                    <span key={i} style={{ ...styles.tag, background: "#f3e5f5", color: "#7b1fa2" }}>
-                      {i} <span style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: 4 }} onClick={() => removeTag('interests', i)}>×</span>
-                    </span>
-                  ))}
-                </div>
-                <input
-                  style={{ ...styles.editInput, marginTop: 8 }}
-                  placeholder="Type interest and press Enter..."
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addTag('interests', e.target.value.trim())
-                      e.target.value = ''
-                    }
-                  }}
-                />
-              </div>
-
-              {/* Previous Projects Edit */}
-              <div style={styles.editField}>
-                <label style={styles.editLabel}>Previous Projects</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {(formData.previous_projects || []).map(p => (
-                    <div key={p} style={{ fontSize: '13px', color: '#334155', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      • {p} <span style={{ cursor: 'pointer', color: '#ef4444', fontWeight: 'bold' }} onClick={() => removeTag('previous_projects', p)}>×</span>
-                    </div>
-                  ))}
-                </div>
-                <input
-                  style={{ ...styles.editInput, marginTop: 8 }}
-                  placeholder="Type project and press Enter..."
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addTag('previous_projects', e.target.value.trim())
-                      e.target.value = ''
-                    }
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: "12px", marginTop: "16px", borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
-                <button style={styles.cancelBtn} onClick={() => setIsEditing(false)} disabled={saving}>
-                  Cancel
-                </button>
-                <button style={styles.editBtn} onClick={handleSave} disabled={saving}>
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </div>
-          ) : (
-            // --- VIEW MODE ---
-            <>
-              {/* If partially available show Hours/From/To right away */}
-              {isPartial && (
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                    <span style={styles.iconWrap}>
-                      <IconClock />
-                    </span>
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                      <div style={styles.detailRowText}>
-                        <span style={styles.detailLabelStrong}>Hours:</span>
-                        <span>{hours_available ? `${hours_available} hours/day` : "Not specified"}</span>
-                      </div>
-                      <div style={styles.detailRowText}>
-                        <span style={styles.detailLabelStrong}>From:</span>
-                        <span>{from_date ? formatDateDisplay(from_date) : "—"}</span>
-                      </div>
-                      <div style={styles.detailRowText}>
-                        <span style={styles.detailLabelStrong}>To:</span>
-                        <span>{to_date ? formatDateDisplay(to_date) : "—"}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-
-
-              {/* Email */}
-              {email && (
-                <div style={styles.section}>
-                  <div style={styles.infoRow}>
-                    <span style={styles.iconWrap}>
-                      <IconMail />
-                    </span>
-                    <a href={`mailto:${email}`} style={{ color: "#0b5fa5", textDecoration: "none", fontSize: "13px" }}>
-                      {email}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Skills */}
-              {safeSkills && safeSkills.length > 0 && (
-                <div style={styles.section}>
-                  <div style={styles.sectionTitle}>Skills</div>
+                  <label style={styles.editLabel}>Interests</label>
                   <div style={styles.tags}>
-                    {safeSkills.map((skill) => (
-                      <span key={skill} style={styles.tag}>
-                        {skill}
+                    {(formData.interests || []).map(i => (
+                      <span key={i} style={{ ...styles.tag, background: "#f3e5f5", color: "#7b1fa2" }}>
+                        {i} <span style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: 4 }} onClick={() => removeTag('interests', i)}>×</span>
                       </span>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Interests */}
-              {safeInterests && safeInterests.length > 0 && (
-                <div style={styles.section}>
-                  <div style={styles.sectionTitle}>Interests</div>
-                  <div style={styles.tags}>
-                    {safeInterests.map((interest) => (
-                      <span key={interest} style={{ ...styles.tag, background: "#f3e5f5", color: "#7b1fa2" }}>
-                        {interest}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Previous projects */}
-              {safePrevious && safePrevious.length > 0 && (
-                <div style={styles.section}>
-                  <div style={styles.sectionTitle}>Previous projects</div>
-                  <ul style={{ margin: 0, paddingLeft: 20, fontSize: "13px", color: "#374151" }}>
-                    {safePrevious.map((proj, idx) => (
-                      <li key={idx} style={{ marginBottom: 6 }}>
-                        {proj}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Manager Edit Button */}
-              {isManager && (
-                <div style={{ marginTop: 20, borderTop: '1px solid #eee', paddingTop: 12, textAlign: 'right' }}>
-                  <button
-                    style={styles.editBtn}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setIsEditing(true)
+                  <input
+                    style={{ ...styles.editInput, marginTop: 8 }}
+                    placeholder="Type interest and press Enter..."
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addTag('interests', e.target.value.trim())
+                        e.target.value = ''
+                      }
                     }}
-                  >
-                    Edit Details
+                  />
+                </div>
+
+                {/* Previous Projects Edit */}
+                <div style={styles.editField}>
+                  <label style={styles.editLabel}>Previous Projects</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {(formData.previous_projects || []).map(p => (
+                      <div key={p} style={{ fontSize: '13px', color: '#334155', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        • {p} <span style={{ cursor: 'pointer', color: '#ef4444', fontWeight: 'bold' }} onClick={() => removeTag('previous_projects', p)}>×</span>
+                      </div>
+                    ))}
+                  </div>
+                  <input
+                    style={{ ...styles.editInput, marginTop: 8 }}
+                    placeholder="Type project and press Enter..."
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addTag('previous_projects', e.target.value.trim())
+                        e.target.value = ''
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Cluster Edit */}
+                {/* <div style={{ ...styles.editSectionTitle, marginTop: 16, borderTop: '1px solid #e5e7eb', paddingTop: 8 }}>Cluster Details</div>
+                <div style={styles.editGrid}>
+                  <div style={styles.editField}>
+                    <label style={styles.editLabel}>Cluster</label>
+                    <select
+                      style={styles.editInput}
+                      value={formData.clusterMode || ""}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setFormData(prev => {
+                          const newData = { ...prev, clusterMode: val };
+                          if (val !== "Multiple") {
+                            newData.cluster = val;
+                            newData.cluster2 = "";
+                          } else {
+                            // If switching to Multiple, keep existing as cluster1 if valid
+                            if (prev.clusterMode && prev.clusterMode !== "Multiple") {
+                              newData.cluster = prev.clusterMode;
+                            }
+                          }
+                          return newData;
+                        });
+                      }}
+                    >
+                      <option value="">Select Cluster</option>
+                      <option value="MEBM">MEBM</option>
+                      <option value="M&T">M&T</option>
+                      <option value="S&PS Insitu">S&PS Insitu</option>
+                      <option value="S&PS Exsitu">S&PS Exsitu</option>
+                      <option value="Multiple">Multiple</option>
+                    </select>
+                  </div>
+
+                  {formData.clusterMode === "Multiple" && (
+                    <>
+                      <div style={styles.editField}>
+                        <label style={styles.editLabel}>Cluster 1</label>
+                        <select
+                          style={styles.editInput}
+                          value={formData.cluster || ""}
+                          onChange={e => setFormData({ ...formData, cluster: e.target.value })}
+                        >
+                          <option value="">Select Cluster 1</option>
+                          <option value="MEBM">MEBM</option>
+                          <option value="M&T">M&T</option>
+                          <option value="S&PS Insitu">S&PS Insitu</option>
+                          <option value="S&PS Exsitu">S&PS Exsitu</option>
+                        </select>
+                      </div>
+                      <div style={styles.editField}>
+                        <label style={styles.editLabel}>Cluster 2</label>
+                        <select
+                          style={styles.editInput}
+                          value={formData.cluster2 || ""}
+                          onChange={e => setFormData({ ...formData, cluster2: e.target.value })}
+                        >
+                          <option value="">Select Cluster 2</option>
+                          <option value="MEBM">MEBM</option>
+                          <option value="M&T">M&T</option>
+                          <option value="S&PS Insitu">S&PS Insitu</option>
+                          <option value="S&PS Exsitu">S&PS Exsitu</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+                </div> */}
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: "12px", marginTop: "16px", borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
+                  <button style={styles.cancelBtn} onClick={() => setIsEditing(false)} disabled={saving}>
+                    Cancel
+                  </button>
+                  <button style={styles.editBtn} onClick={handleSave} disabled={saving}>
+                    {saving ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
-              )}
-            </>
-          )}
-        </div>
-      )
+              </div>
+            ) : (
+              // --- VIEW MODE ---
+              <>
+                {/* If partially available show Hours/From/To right away */}
+                {isPartial && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <span style={styles.iconWrap}>
+                        <IconClock />
+                      </span>
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <div style={styles.detailRowText}>
+                          <span style={styles.detailLabelStrong}>Hours:</span>
+                          <span>{hours_available ? `${hours_available} hours/day` : "Not specified"}</span>
+                        </div>
+                        <div style={styles.detailRowText}>
+                          <span style={styles.detailLabelStrong}>From:</span>
+                          <span>{from_date ? formatDateDisplay(from_date) : "—"}</span>
+                        </div>
+                        <div style={styles.detailRowText}>
+                          <span style={styles.detailLabelStrong}>To:</span>
+                          <span>{to_date ? formatDateDisplay(to_date) : "—"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Email */}
+                {email && (
+                  <div style={styles.section}>
+                    <div style={styles.infoRow}>
+                      <span style={styles.iconWrap}>
+                        <IconMail />
+                      </span>
+                      <a href={`mailto:${email}`} style={{ color: "#0b5fa5", textDecoration: "none", fontSize: "13px" }}>
+                        {email}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Skills */}
+                {safeSkills && safeSkills.length > 0 && (
+                  <div style={styles.section}>
+                    <div style={styles.sectionTitle}>Skills</div>
+                    <div style={styles.tags}>
+                      {safeSkills.map((skill) => (
+                        <span key={skill} style={styles.tag}>
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Interests */}
+                {safeInterests && safeInterests.length > 0 && (
+                  <div style={styles.section}>
+                    <div style={styles.sectionTitle}>Interests</div>
+                    <div style={styles.tags}>
+                      {safeInterests.map((interest) => (
+                        <span key={interest} style={{ ...styles.tag, background: "#f3e5f5", color: "#7b1fa2" }}>
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Previous projects */}
+                {safePrevious && safePrevious.length > 0 && (
+                  <div style={styles.section}>
+                    <div style={styles.sectionTitle}>Previous projects</div>
+                    <ul style={{ margin: 0, paddingLeft: 20, fontSize: "13px", color: "#374151" }}>
+                      {safePrevious.map((proj, idx) => (
+                        <li key={idx} style={{ marginBottom: 6 }}>
+                          {proj}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Manager Edit Button */}
+                {isManager && (
+                  <div style={{ marginTop: 20, borderTop: '1px solid #eee', paddingTop: 12, textAlign: 'right' }}>
+                    <button
+                      style={styles.editBtn}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setIsEditing(true)
+                      }}
+                    >
+                      Edit Details
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )
       }
 
       <div style={styles.footerHint}>Click to expand →</div>
