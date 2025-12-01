@@ -274,6 +274,9 @@ export default function DashboardPage() {
             <div style={styles.chartContent}>
                 {children}
             </div>
+            <div style={{ marginTop: "auto", paddingTop: "16px", fontSize: "12px", color: "#9ca3af", textAlign: "right", width: "100%" }}>
+                Updated at {new Date().toLocaleDateString()}
+            </div>
         </div>
     )
 
@@ -530,7 +533,12 @@ export default function DashboardPage() {
                                 </select>
                             }
                         >
-                            <VerticalBarChart data={metrics.partialHoursDistribution} color="#f59e0b" />
+                            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
+                                <span style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "8px" }}>Assuming 176 hrs/month/person</span>
+                                <div style={{ height: "90%", width: "100%" }}>
+                                    <VerticalBarChart data={metrics.partialHoursDistribution} color="#f59e0b" />
+                                </div>
+                            </div>
                         </ChartCard>
 
                         {/* 2. Users per Cluster */}

@@ -228,7 +228,7 @@ export default function Navbar_Manager({ user, onLogout, title = "Employee Dashb
                         e.currentTarget.style.color = "rgba(255,255,255,0.9)"
                     }}
                 >
-                    <span>🏠</span> Home
+                    <span>🏠</span> Employee Directory
                 </div>
                 <div
                     style={styles.drawerMenuItem}

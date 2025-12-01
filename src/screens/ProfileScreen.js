@@ -170,7 +170,7 @@ export default function ProfileScreen({ employee = null, onBack, onSaveProfile, 
         body: JSON.stringify(payload),
       })
       let body = await readResponse(res)
-      console.log("[ProfileScreen] PATCH", res.status, body)
+
 
       if (!res.ok) {
         throw new Error(`Update failed with status ${res.status}`)

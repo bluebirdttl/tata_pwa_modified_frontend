@@ -192,25 +192,7 @@ export default function Navbar_IC({ user, onLogout, title = "Employee Dashboard"
                 <div style={styles.drawerHeader}>
                     <h2 style={styles.drawerTitle}>Menu</h2>
                 </div>
-                <div
-                    style={styles.drawerMenuItem}
-                    onClick={() => {
-                        setMenuOpen(false)
-                        navigate("/home")
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "rgba(255,255,255,0.1)"
-                        e.currentTarget.style.borderLeft = "4px solid #ffffff"
-                        e.currentTarget.style.color = "#ffffff"
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent"
-                        e.currentTarget.style.borderLeft = "4px solid transparent"
-                        e.currentTarget.style.color = "rgba(255,255,255,0.9)"
-                    }}
-                >
-                    <span>🏠</span> Home
-                </div>
+
                 <div
                     style={styles.drawerMenuItem}
                     onClick={() => {

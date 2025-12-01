@@ -637,7 +637,7 @@ export default function EmployeeCard({ employee = {}, getInitials, currentUser, 
     if (!isManager) return
 
     const currentStars = typeof displayStars === 'number' ? displayStars : (displayStars ? 1 : 0)
-    const newStarCount = Math.max(0, Math.min(10, currentStars + delta)) // Limit between 0 and 10
+    const newStarCount = Math.max(0, Math.min(100, currentStars + delta)) // Limit between 0 and 100
 
     // Optimistic update
     const previousStars = displayStars

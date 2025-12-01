@@ -220,7 +220,7 @@ export default function LoginScreen({ onLogin }) {
                             rel="noopener noreferrer"
                             style={{ color: "#0078d4", textDecoration: "none", fontSize: "14px", fontWeight: "500" }}
                         >
-                            Facing Problem on Loggingm?
+                            Facing Problem on Logging?
                         </a>
                     </div>
                 </form>

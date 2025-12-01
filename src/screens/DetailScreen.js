@@ -331,7 +331,7 @@ export default function DetailScreen({ employee = null, onBack, onSaveDetails, o
       const base = API_URL.replace(/\/$/, "")
       const id = employee.empid
       const target = `${base}/api/employees/${encodeURIComponent(id)}`
-      console.log("[DetailScreen] Save payload:", payload, "target:", target)
+
 
       // Try PUT
       let res = await fetch(target, {
@@ -340,7 +340,7 @@ export default function DetailScreen({ employee = null, onBack, onSaveDetails, o
         body: JSON.stringify(payload),
       })
       let body = await readResponse(res)
-      console.log("[DetailScreen] PUT", res.status, body)
+
 
       // PATCH fallback
       if (!res.ok) {
@@ -351,7 +351,7 @@ export default function DetailScreen({ employee = null, onBack, onSaveDetails, o
           body: JSON.stringify(payload),
         })
         body = await readResponse(res)
-        console.log("[DetailScreen] PATCH", res.status, body)
+
       }
 
       // POST fallback
@@ -363,7 +363,7 @@ export default function DetailScreen({ employee = null, onBack, onSaveDetails, o
           body: JSON.stringify({ empid: id, ...payload }),
         })
         const postBody = await readResponse(postRes)
-        console.log("[DetailScreen] POST", postRes.status, postBody)
+
         if (!postRes.ok) {
           throw new Error(`All update attempts failed. Last status: ${postRes.status}. Body: ${JSON.stringify(postBody)}`)
         }
@@ -457,7 +457,7 @@ export default function DetailScreen({ employee = null, onBack, onSaveDetails, o
       marginBottom: "40px",
       position: "sticky",
       top: 0,
-      zIndex: 50,
+      zIndex: 200,
     },
     mainContainer: {
       maxWidth: "1280px", // Wider for laptop
@@ -738,7 +738,7 @@ export default function DetailScreen({ employee = null, onBack, onSaveDetails, o
     <div style={styles.page}>
       {/* Navbar */}
       <div style={styles.navContainer}>
-        <Navbar user={employee} onLogout={onLogout} title="Employee Directory" />
+        <Navbar user={employee} onLogout={onLogout} title="Details" />
       </div>
 
       <div style={styles.mainContainer}>
